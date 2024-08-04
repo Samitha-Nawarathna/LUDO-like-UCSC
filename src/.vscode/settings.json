@@ -1,7 +1,5 @@
 {
     "files.associations": {
-        "stdio.h": "c",
-        "types.h": "c",
-        "game_logic.h": "c"
+        "type_traits": "c"
     }
 }
