@@ -26,21 +26,27 @@
 #include <string.h>
 #endif
 
+#ifndef _STDINT_
+#define _STDINT_
+#include <stdint.h>
+#endif
 
 
 #define RSEED 42
+#define FIRST_ROLL -1
 
 #define TOTAL_PIECES_PLAYER 4
 #define TOTAL_PLAYERS 4
 #define TOTAL_PIECES  TOTAL_PIECES_PLAYER*TOTAL_PLAYERS
 #define TOTAL_CELLs 52
 #define CELLS_IN_HOME 6
-#define TOO_FAR 999
+#define TOO_FAR 255
 
 // #define BASE 58
 #define HOME_START 52
 // #define HOME 57
-#define APPROACH_CELL 50
+#define APPROACH_CELL 0
+#define STARTING_CELL 2
 
 #define PIECE_AT(game, i, j) (game)->pieceArr[(i)*TOTAL_PIECES_PLAYER + (j)]
 #define PLAYER_AT(game, i) (game)->playerArr[(i)]
@@ -53,25 +59,25 @@ typedef enum Region {BASE, PATH, HOME}Region;
 
 typedef struct 
 {
-    int value;
-    int max;
+    short value;
+    short max;
 }ModularInt;
 
-ModularInt modular_new(int max);
-ModularInt modular_add(ModularInt a, int b);
-void modular_assign(ModularInt *a, int value);
+ModularInt modular_new(short value, short max);
+ModularInt modular_add(ModularInt a, short b);
+void modular_assign(ModularInt *a, short value);
 bool modular_is_between(ModularInt lower, ModularInt upper, ModularInt a);
-// int mod_value(ModularInt a);
+// short mod_value(ModularInt a);
 
 typedef union 
 {
-    int far_from_home;
+    short far_from_home;
     ModularInt location;
 }PieceLocation;
 
 typedef struct 
 {
-    int no_of_captures;
+    short no_of_captures;
     char name[3];
     char color_name[6];    
     Region region;
@@ -81,6 +87,8 @@ typedef struct
     short direction;    
     bool approach;
     float multiplier;
+
+
 }Piece;
 
 Piece new_piece(Color color);
@@ -95,7 +103,7 @@ typedef union
 
 typedef struct 
 {
-    int no_of_pieces;
+    short no_of_pieces;
     ModularInt location;
     Color color;
     Piece *pieces;
@@ -103,15 +111,24 @@ typedef struct
     bool direction;
 }Block;
 
-typedef struct 
+typedef struct Player Player;
+typedef struct Action Action;
+typedef struct ActionSpace ActionSpace;
+
+typedef struct Player
 {
-    int no_in_home_pieces;
+    short no_pieces_in_home;
+    short no_pieces_in_path;
+    short no_pieces_in_base;
     Color color;
     Piece *pieces;
     char color_name[6];
+    Action (* perform_strategy)(Player *self, ActionSpace action);
+    short same_rolls;
+    short prev_rolled;    
 }Player;
 
-Player new_player(Color color, Piece *pieces);
+Player new_player(Color color, Piece *pieces, Action (* perform_strategy)(Player *self, ActionSpace action));
 
 typedef struct 
 {
@@ -126,24 +143,26 @@ typedef struct
     Player *playerArr;
     Piece *pieceArr;
     Board *board;
-    int *player_pointer, *winner;
+    short *player_pointer, *winner;
+    short *starting_player;
 }Game;
 
 void new_game(Game *game);
 
-typedef struct 
+typedef struct Action
 {
     ActionType action;
     Operand operand1, operand2;
 }Action;
 
-typedef struct 
+typedef struct ActionSpace
 {
     Action *action_space;
-    int length;
+    short length;
 }ActionSpace;
 
-
+//gameplay stratagies
+Action random_player(Player *player, ActionSpace action_space);
 
 
 #endif

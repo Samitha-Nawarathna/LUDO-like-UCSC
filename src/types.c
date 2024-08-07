@@ -1,14 +1,14 @@
 #include "types.h"
 
-ModularInt modular_new(int max)
+ModularInt modular_new(short value, short max)
 {
-    ModularInt mod_int = {0, max};
+    ModularInt mod_int = {value%max, max};
     return mod_int;
 }
 
-void modular_assign(ModularInt *a, int value)
+void modular_assign(ModularInt *a, short value)
 {
-    int temp = value%a->max;
+    short temp = value%a->max;
 
     if (temp < 0)
     {
@@ -19,10 +19,10 @@ void modular_assign(ModularInt *a, int value)
     }
 }
 
-ModularInt modular_add(ModularInt a, int b)
+ModularInt modular_add(ModularInt a, short b)
 {
     // assert (a.max == b.max);
-    ModularInt c = modular_new(a.max);
+    ModularInt c = modular_new(0, a.max);
 
     modular_assign(&c, a.value + b);
     return c;
@@ -39,9 +39,9 @@ bool modular_is_between(ModularInt lower, ModularInt upper, ModularInt c) {
     }
 }
 
-// int mod_value(ModularInt a)
+// short mod_value(ModularInt a)
 // {
-//     int temp = a.value%a.max;
+//     short temp = a.value%a.max;
 
 //     if (temp < 0)
 //     {
@@ -56,8 +56,9 @@ void new_game(Game *game)
     game->board = (Board *)malloc(sizeof(Board));
     game->playerArr = (Player *)malloc(sizeof(Player)*TOTAL_PLAYERS);
     game->pieceArr = (Piece *)malloc(sizeof(Piece)*TOTAL_PIECES);
-    game->player_pointer = (int *)malloc(sizeof(int));
-    game->winner = (int *)malloc(sizeof(int));
+    game->player_pointer = (short *)malloc(sizeof(short));
+    game->starting_player = (short *)malloc(sizeof(short));
+    game->winner = (short *)malloc(sizeof(short));
 
 
     *game->board = new_board();
@@ -75,7 +76,7 @@ void new_game(Game *game)
             strcpy(PIECE_AT(game, i, j).color_name, player_names[i]);
         }
         
-        PLAYER_AT(game, i) = new_player(i, &PIECE_AT(game, i, 0));
+        PLAYER_AT(game, i) = new_player(i, &PIECE_AT(game, i, 0), random_player);
         strcpy(PLAYER_AT(game, i).color_name, player_names[i]);
     }
 
@@ -88,7 +89,7 @@ Piece new_piece(Color color)
     piece.no_of_captures = 0;
     piece.multiplier = 0;
     piece.region = BASE;
-    piece.location.far_from_home = 999;
+    piece.location.far_from_home = 255;
     piece.start_location.max = TOTAL_CELLs;
     modular_assign(&piece.start_location, color*13);
     piece.approach = false;
@@ -98,12 +99,16 @@ Piece new_piece(Color color)
     return piece; 
 }
 
-Player new_player(Color color, Piece *pieces)
+Player new_player(Color color, Piece *pieces, Action (* perform_strategy)(Player *self, ActionSpace action))
 {
     Player player;
     player.color = color;
-    player.no_in_home_pieces = 0;
+    player.no_pieces_in_home = 0;
+    player.no_pieces_in_base = 4;
+    player.no_pieces_in_path = 0;
     player.pieces = pieces;
+    player.perform_strategy = perform_strategy;
+    player.same_rolls = 0;
 
     return player; 
 }
