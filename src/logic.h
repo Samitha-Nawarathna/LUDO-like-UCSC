@@ -29,22 +29,22 @@ short roll_die(Player *player, bool verbose);
 ModularInt get_destination(Piece *piece, short rolled);
 Piece *get_piece(Game *game, ModularInt destination);
 
-void move_std(Piece *piece, short steps);
-void move_mistory(Piece *piece, short steps);
-void move_home(Piece *piece, short steps);
+void bring_to_path(Player *player, Piece *piece, bool verbose);
+void move(Player *player, Piece *piece, ModularInt dest, bool verbose);
+void move_to_home_straight(Player *player, Piece *piece, int steps_in_home_straight, bool verbose);
+void move_in_home_straight(Player *player, Piece *piece, int steps, bool verbose);
+void capture(Player *player, Piece *piece, Player *target_player, Piece *target_piece, bool verbose);
 
-void create_block(Piece *piece1, Piece *piece2);
-void update_block(Block *block, Piece *piece);
-void add_to_block(Block *block);
-void remove_from_block(Block *block);
-void get_blocked(Piece *piece, short step);
-
-void capture(Player *player, Piece *piece1, Piece *piece2);
+// void create_block(Piece *piece1, Piece *piece2);
+// void update_block(Block *block, Piece *piece);
+// void add_to_block(Block *block);
+// void remove_from_block(Block *block);
+// void get_blocked(Piece *piece, short step);
 
 ActionSpace generate_action_space(Game *game, short player_id, short rolled);
 ActionSpace action_space_filter(ActionSpace action_space, Player *player, short rolled);
 Action search_optimal_action(Player *player, ActionSpace action_space);
-void perform(Player *player, Action action);
+void perform(Player *player, int rolled, Action action);
 
 void play(Game *game, short *player_pointer);
 void play_round(Game *game);

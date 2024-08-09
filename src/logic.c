@@ -131,6 +131,7 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
     ActionSpace action_space;
     action_space.action_space = (Action *)malloc(sizeof(Action)*TOTAL_PIECES_PLAYER);
     action_space.length = 0;
+    Player *player = &PLAYER_AT(game, player_id);
 
     for (short i = 0; i < TOTAL_PIECES_PLAYER; i++)
     {
@@ -147,7 +148,7 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
                 Operand operand1;
                 operand1.piece = piece;
 
-                Action action = {BRING_TO_PATH, operand1, NULL};
+                Action action = {BRING_TO_PATH, player, piece, 0, NULL, NULL};
                 action_space.action_space[action_space.length] = action;
                 action_space.length++;
                 continue;
@@ -162,13 +163,8 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
             short to_move = piece->multiplier*rolled;
             if (to_move && (piece->location.far_from_home >= to_move))
             {
-                Operand operand1;
-                operand1.piece = piece;
-                
-                Operand operand2;
-                operand2.rolled = rolled;
-
-                Action action = {MOVE_IN_HOME_S, operand1, operand2};
+                int steps = rolled + piece->multiplier*rolled;
+                Action action = {MOVE_IN_HOME_S, player, piece, steps, NULL, NULL};
                 action_space.action_space[action_space.length] = action;
                 action_space.length++;
                 continue;            
@@ -188,29 +184,19 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
             ModularInt piece_approach = modular_add(piece->start_location, APPROACH_CELL);
             if (piece->direction == 1 && modular_is_between(current_location, destination, piece_approach))
             {
-                short to_move = modular_add(destination, -piece_approach.value).value;
+                short steps_in_home_straight = modular_add(destination, -piece_approach.value).value;
 
-                Operand operand1;
-                operand1.piece = piece;
-                
-                Operand operand2;
-                operand2.rolled = to_move;
-
-                Action action = {MOVE_TO_HOME_S, operand1, operand2};
+                Action action = {MOVE_TO_HOME_S, player, piece, steps_in_home_straight, NULL, NULL};
                 action_space.action_space[action_space.length] = action;
                 action_space.length++;
                 continue;                
             }
             else if(piece->direction == -1 && modular_is_between(destination, current_location, piece_approach))
             {
-                short to_move = modular_add(piece_approach, -destination.value).value;
-                Operand operand1;
-                operand1.piece = piece;
                 
-                Operand operand2;
-                operand2.rolled = to_move;
+                short steps_in_home_straight = modular_add(piece_approach, -destination.value).value;
 
-                Action action = {MOVE_TO_HOME_S, operand1, operand2};
+                Action action = {MOVE_TO_HOME_S, player, piece, steps_in_home_straight, NULL, NULL};
                 action_space.action_space[action_space.length] = action;
                 action_space.length++;
                 continue;                 
@@ -222,13 +208,14 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
         
         if ((target_piece != NULL) && (target_piece->color != piece->color))
         {
-            Operand operand1;
-            operand1.piece = piece;
             
-            Operand operand2;
-            operand2.piece = target_piece;
+            Operand operand1;
+            operand1.piece = target_piece;
 
-            Action action = {CAPTURE, operand1, operand2};            
+            Operand operand2;
+            operand2.player = &PLAYER_AT(game, target_piece->color);
+
+            Action action = {CAPTURE, player, piece, 0, operand1, operand2};            
 
             action_space.action_space[action_space.length] = action;
             action_space.length++;
@@ -238,13 +225,12 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
             
 
         //move in standard path
-            Operand operand1;
-            operand1.piece = piece;
-            
-            Operand operand2;
-            operand2.rolled = modular_add(destination, -piece->location.location.value).value;
 
-            Action action = {MOVE_PATH, operand1, operand2};
+            
+            Operand operand1;
+            operand1.standard_steps = modular_add(destination, -piece->location.location.value);
+
+            Action action = {MOVE_PATH, player, piece, 0, operand1, NULL};
             action_space.action_space[action_space.length] = action;
             action_space.length++;
         
@@ -254,7 +240,7 @@ ActionSpace generate_action_space(Game *game, short player_id, short rolled)
      
 }
 
-void bring_to_path(Player *player, Piece *piece)
+void bring_to_path(Player *player, Piece *piece, bool verbose)
 {
     assert (piece->region == BASE);
     piece->region = PATH; 
@@ -266,56 +252,78 @@ void bring_to_path(Player *player, Piece *piece)
 
     //update_map
     //log
-    printf("%s player moves piece %s to starting point.\n\n", piece->color_name, piece->name, piece->color);  
+    if(verbose)
+    {
+        printf("%s player moves piece %s to starting point.\n\n", piece->color_name, piece->name, piece->color);
+    }
+      
 }
 
-void move(Piece *piece, short rolled)
+void move(Player *player, Piece *piece, ModularInt dest, bool verbose)
 {
     assert (piece->region == PATH);
 
     ModularInt current_location = piece->location.location; 
-    piece->location.location = modular_add(piece->location.location, rolled);
-
+    piece->location.location = dest;
+    int steps = modular_add(current_location, dest.value).value;
     //update_map;
     //log
     char direction[18] = " ";
+    
 
     if (piece->direction == -1)
     {
         strcpy(direction, " counter-");
     }
-    printf("%s moves piece %s from location %d to %d by %d units in%sclockwise direction\n\n", piece->color_name, piece->name, current_location.value, piece->location.location.value, rolled, direction);
+
+    if (verbose)
+    {
+        printf("%s moves piece %s from location %d to %d by %d units in%sclockwise direction\n\n", piece->color_name, piece->name, current_location.value, piece->location.location.value, steps, direction);   
+    }
+    
 }
 
-void move_to_home_straight(Player *player, Piece *piece, short rolled)
+void move_to_home_straight(Player *player, Piece *piece, int steps, bool verbose)
 {
     assert (piece->region == PATH);
 
     piece->region = HOME;
     ModularInt current_location = piece->location.location; 
-    piece->location.far_from_home = CELLS_IN_HOME - rolled;
-    player->no_pieces_in_path--;
+    piece->location.far_from_home = CELLS_IN_HOME - steps;
+    
+    if( !piece->location.far_from_home)
+    {
+        player->no_pieces_in_path--;
+        player->no_pieces_in_home++;
+    }
+    
 
     //update_map
-    //log 
-    printf("%s moves piece %s from location %d in standard path to %s homepath %d by %d units in home straight\n\n", piece->color_name, piece->name, current_location.value, piece->color_name, (6 - piece->location.far_from_home), rolled);}
+    //log
+    if (verbose)
+    { 
+        printf("%s moves piece %s from location %d in standard path to %s homepath %d by %d units in home straight\n\n", piece->color_name, piece->name, current_location.value, piece->color_name, (6 - piece->location.far_from_home), steps);
+    }
+}
 
-void move_in_home_straight(Piece *piece, short rolled)
+void move_in_home_straight(Player *player, Piece *piece, int steps, bool verbose)
 {
     assert (piece->region == HOME);
 
     short current_distance = piece->location.far_from_home;
-    piece->location.far_from_home = current_distance - rolled;
+    piece->location.far_from_home = current_distance - steps;
 
     //update_map
     //log 
     // printf("rolled = %d", piece->location.far_from_home);
 
-    printf("%s moves piece %s from location %s homepath %d to %s homepath %d by %d units in home straight\n\n", piece->color_name, piece->name, piece->color_name, (6 - current_distance), piece->color_name, (6 - piece->location.far_from_home), rolled);
-
+    if (verbose)
+    {
+        printf("%s moves piece %s from location %s homepath %d to %s homepath %d by %d units in home straight\n\n", piece->color_name, piece->name, piece->color_name, (6 - current_distance), piece->color_name, (6 - piece->location.far_from_home), steps);
+    }
 }
 
-void capture(Player *player, Piece *piece, Piece *target_piece)
+void capture(Player *player, Piece *piece, Player *target_player, Piece *target_piece, bool verbose)
 {
     assert (piece->region = PATH && target_piece->region == PATH);
 
@@ -323,40 +331,56 @@ void capture(Player *player, Piece *piece, Piece *target_piece)
     piece->location = target_piece->location;
     target_piece->location.far_from_home = TOO_FAR;
     target_piece->region = BASE;
-    player->no_pieces_in_base++;
+    
+    target_player->no_pieces_in_base++;
+    target_player->no_pieces_in_path--;
 
     piece->no_of_captures += 1;
 
     target_piece->no_of_captures = 0;
     target_piece->multiplier = 0;
 
-    printf("%s piece %s lands on square %d, captures %s piece %s, and return it to the base\n", piece->color_name, piece->name, current_location.value, target_piece->color_name, target_piece->name);
-    printf("%s player now has %d/4 pieces on the board and %d/4 pieces on the base\n\n",target_piece->color_name, player->no_pieces_in_path, player->no_pieces_in_base);
 
+    if (verbose)
+    {
+        printf("%s piece %s lands on square %d, captures %s piece %s, and return it to the base\n", piece->color_name, piece->name, current_location.value, target_piece->color_name, target_piece->name);
+        printf("%s player now has %d/4 pieces on the board and %d/4 pieces on the base\n\n",target_piece->color_name, player->no_pieces_in_path, player->no_pieces_in_base);
+    }
 }
 
-void perform(Player *player, Action action)
+// void blocked_by(Player *player, Piece *piece, Block *blocked_piece, int rolled)
+// {
+//     ModularInt current_location = piece->location.location;
+//     int real_steps;
+//     ModularInt expected_
+//     move(piece, rolled, false);
+
+//     printf("%s piece %s is blocked from moving from %d to %d by %s piece %s", player->color_name, piece->name, current_location.value, piece->location.location.value, piece->color_name, piece->name);
+
+// }
+
+void perform(Player *player, int rolled, Action action)
 {    
     switch (action.action)
     {
     case BRING_TO_PATH:
-        bring_to_path(player, action.operand1.piece);
+        bring_to_path(player, action.piece,  true);
         break;
     
     case MOVE_PATH:
-        move(action.operand1.piece, action.operand2.rolled);
+        move(player, action.piece, action.operand1.standard_steps, true);
         break;
 
     case MOVE_TO_HOME_S:
-        move_to_home_straight(player, action.operand1.piece, action.operand2.rolled);
+        move_to_home_straight(player, action.piece, action.steps, true);
         break;
 
     case MOVE_IN_HOME_S:
-        move_in_home_straight(action.operand1.piece, action.operand2.rolled);
+        move_in_home_straight(player, action.piece, action.steps, true);
         break;
 
     case CAPTURE:
-        capture(player, action.operand1.piece, action.operand2.piece);
+        capture(player, action.piece, action.operand2.player, action.operand1.piece, true);
         break;
 
     default:
@@ -392,7 +416,7 @@ void action_logic(Game *game, Action selected_action)
 {
     if (selected_action.action == CAPTURE)
     {
-        player_pointer_update(game, selected_action.operand1.piece->color);
+        player_pointer_update(game, selected_action.piece->color);
         // *game->player_pointer = selected_action.operand1.piece->color;
     }
     
@@ -409,7 +433,7 @@ void print_action_space_(ActionSpace *action_space)
     {
         // printf("i = %d\n", ((Piece *)action_space->action_space[i].operand1)->color);
         Action action = action_space->action_space[i];
-        printf("{%d} {%s}\n", action.action, action.operand1.piece->name);
+        printf("{%d} {%s}\n", action.action, action.piece->name);
     }
     
 }
@@ -447,7 +471,7 @@ void play(Game *game, short *player_pointer)
     
 
     action_logic(game, selected_action);
-    perform(player, selected_action);
+    perform(player, rolled, selected_action);
 
     printf("Played!\n\n");
 
@@ -479,7 +503,7 @@ void play_round(Game *game)
     {
         Player *player = &PLAYER_AT(game, i);
 
-        printf("%s player now has %d/4 pieces on the board and %d/4 pieces on base.\n", player->color_name, player->no_pieces_in_path, player->no_pieces_in_home);
+        printf("%s player now has %d/4 pieces on the board and %d/4 pieces on base.\n", player->color_name, player->no_pieces_in_path, player->no_pieces_in_base);
         printf("\n====================================================================================\n");
         printf("Location of pieces %s\n", player->color_name);
         printf("\n====================================================================================\n");

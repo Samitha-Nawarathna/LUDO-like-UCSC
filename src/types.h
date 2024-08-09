@@ -54,7 +54,7 @@
 #define MODULAR_IS_EQL(a, b) ((a).value == (b).value) ? true: false
 
 typedef enum Color {YELLO, BLUE, RED, GREEN} Color;
-typedef enum ActionType {BRING_TO_PATH, MOVE_PATH, MOVE_TO_HOME_S, MOVE_IN_HOME_S, CAPTURE}ActionType;
+typedef enum ActionType {BRING_TO_PATH, BLOCKED, MOVE_PATH, MOVE_TO_HOME_S, MOVE_IN_HOME_S, BREAK_BLOCK, CREAT_BLOCK, UPDATE_BLOCK, CAPTURE, MOVE_BLOCK, BLOCK_CAPTURE}ActionType;
 typedef enum Region {BASE, PATH, HOME}Region;
 
 typedef struct 
@@ -93,14 +93,6 @@ typedef struct
 
 Piece new_piece(Color color);
 
-
-typedef union 
-{
-    Piece *piece;
-    short rolled;
-}Operand;
-
-
 typedef struct 
 {
     short no_of_pieces;
@@ -130,6 +122,15 @@ typedef struct Player
 
 Player new_player(Color color, Piece *pieces, Action (* perform_strategy)(Player *self, ActionSpace action));
 
+typedef union 
+{
+    Piece *piece;
+    Player *player;
+    Block *block;
+    ModularInt standard_steps;
+    short steps;
+}Operand;
+
 typedef struct 
 {
     bool *std_path;
@@ -152,6 +153,9 @@ void new_game(Game *game);
 typedef struct Action
 {
     ActionType action;
+    Player *player;
+    Piece *piece;
+    int steps;
     Operand operand1, operand2;
 }Action;
 

@@ -18,7 +18,6 @@ void print_action_space(ActionSpace *action_space)
     
 }
 
-void move(Piece *piece, short rolled);
 short main()
 {
     srand(time(NULL));
@@ -45,22 +44,22 @@ short main()
     // // game.board->std_path[*game.player_pointer*TOTAL_PIECES_PLAYER + 1] = 1;
     // // game.board->std_path[*game.player_pointer*TOTAL_PIECES_PLAYER + 1] = 1;
 
-    PIECE_AT(&game, *game.player_pointer - 1, 1).location.location = modular_add(modular_new(7, 52), 2);
-    PIECE_AT(&game, *game.player_pointer - 1, 1).region = PATH;
+    // PIECE_AT(&game, *game.player_pointer - 1, 1).location.location = modular_add(modular_new(7, 52), 2);
+    // PIECE_AT(&game, *game.player_pointer - 1, 1).region = PATH;
 
 
-    PIECE_AT(&game, *game.player_pointer, 1).location.location = modular_new(7, 52);
-    PIECE_AT(&game, *game.player_pointer, 1).multiplier = 0.5;
-    PIECE_AT(&game, *game.player_pointer, 1).region = PATH; 
+    // PIECE_AT(&game, *game.player_pointer, 1).location.location = modular_new(7, 52);
+    // PIECE_AT(&game, *game.player_pointer, 1).multiplier = 0.5;
+    // PIECE_AT(&game, *game.player_pointer, 1).region = PATH; 
 
-    PIECE_AT(&game, *game.player_pointer, 2).location.location = modular_new(50, 52);
-    PIECE_AT(&game, *game.player_pointer, 2).multiplier = 1;
-    PIECE_AT(&game, *game.player_pointer, 2).region = PATH;
-    PIECE_AT(&game, *game.player_pointer, 2).approach = 1; 
+    // PIECE_AT(&game, *game.player_pointer, 2).location.location = modular_new(50, 52);
+    // PIECE_AT(&game, *game.player_pointer, 2).multiplier = 1;
+    // PIECE_AT(&game, *game.player_pointer, 2).region = PATH;
+    // PIECE_AT(&game, *game.player_pointer, 2).approach = 1; 
 
-    PIECE_AT(&game, *game.player_pointer, 3).location.far_from_home = 4;
-    PIECE_AT(&game, *game.player_pointer, 3).multiplier = 1;
-    PIECE_AT(&game, *game.player_pointer, 3).region = BASE;    
+    // PIECE_AT(&game, *game.player_pointer, 3).location.far_from_home = 4;
+    // PIECE_AT(&game, *game.player_pointer, 3).multiplier = 1;
+    // PIECE_AT(&game, *game.player_pointer, 3).region = BASE;    
     // PIECE_AT(&game, *game.player_pointer, 2).location = 2;
     // PIECE_AT(&game, *game.player_pointer, 2).multiplier = -1;
     // PIECE_AT(&game, *game.player_pointer, 3).location = HOME;
@@ -68,7 +67,7 @@ short main()
     // // PICECE_AT(pieceArr, player_pointer, 3)->multiplier = 1;
     // play(&game, game.player_pointer);
     int i = 0;
-    while (++i < 5)
+    while (++i < 10)
     {
         printf("\n\n====================================================================\n\n");
         play_round(&game);
