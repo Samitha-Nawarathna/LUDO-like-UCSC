@@ -4,89 +4,111 @@
 #include <stdlib.h>
 #include <time.h>
 
-Game game;
-// void *available_actions[] = {};
+/*
+BUGS:
+ * no way to distingush the move after blocking from just moving?
+    #create msg to say whether it is blocked or not but then 3 channels are not enugh
+    
 
-void print_action_space(ActionSpace *action_space)
+*/
+
+/*
+TODO:
+    *perform action
+        #all the things upto pieces are done 
+    *debug blocks action searchs
+        #done
+    *change piece functions to handle base
+        #done
+    *debug block actions and capture function of  pieces
+        #capture done other remains
+    *come up with a way to handle counting in mystery cell things ?  
+        #have an idea  
+*/
+
+
+Game game;
+
+void print_action_space(ActionSpace action_space)
 {
-    for (short i = 0; i < action_space->length; i++)
+    for (short i = 0; i < action_space.length; i++)
     {
-        // printf("i = %d\n", ((Piece *)action_space->action_space[i].operand1)->color);
-        Action action = action_space->action_space[i];
-        printf("{%d} {%s}\n", action.action, action.operand1.piece->name);
+        printf("{%d}, {%d}, {%d}, {%d}\n", action_space.action_space[i].action, action_space.action_space[i].input1, action_space.action_space[i].input2, action_space.action_space[i].input3);
     }
     
+}
+
+void print_player(Player *player)
+{
+    printf("\t%s\n", player->color_name);
+    printf("========================================\n");
+    printf("no 0f pieces in home: %d\n", player->no_pieces_in_home);
+    printf("no 0f pieces in base: %d\n", player->no_pieces_in_base);
+    printf("no 0f pieces in path: %d\n", player->no_pieces_in_path);
+    printf("Same rolls : %d\n", player->same_rolls);
+    printf("Same rolls : %d\n", player->prev_rolled);
+    NEWLINE;
+}
+
+void print_piece(Piece *piece)
+{
+    printf("\t%s\n", piece->color_name);
+    printf("========================================\n");
+    printf("region :%d\n", piece->region);
+    printf("location : %d\n", piece->location.location.value);
+    printf("direction : %d\n", piece->direction);
+    printf("approach: %d\n", piece->approach);
+    printf("multiplier : %f\n", piece->multiplier);
+    printf("block_id : %d\n", piece->block_id);
+    NEWLINE;
+}
+
+
+void print_block(Block *block)
+{
+    printf("\t%d\n", block->color);
+    printf("========================================\n");
+    printf("location : %d\n", block->location.value);
+    printf("direction : %d\n", block->direction);
+    printf("movable: %d\n", block->movable);
+    printf("multiplier : %f\n", block->multiplier);
+    NEWLINE;
 }
 
 short main()
 {
     srand(time(NULL));
-    // Piece *piece = init_piece(RED, pieceArr, playerArr, player_pointer, winner);
-    
     new_game(&game);
-    // printf("Start\n\n");
     start_game(&game);
-    printf("curr_player = %s\n", PLAYER_AT(&game, *game.player_pointer).color_name);
 
-    // PLAYER_AT(&game, *game.player_pointer).pieces[0].region = PATH;
-    // PLAYER_AT(&game, *game.player_pointer).pieces[0].multiplier = 2;
-    // PLAYER_AT(&game, *game.player_pointer).pieces[0].direction = 1;
-    // PLAYER_AT(&game, *game.player_pointer).pieces[0].location.location = modular_new(7, 52);
-    // // PLAYER_AT(&game, *game.player_pointer).pieces[0].
+    *game.player_pointer = GREEN;
+    Piece *op_piece1 = &PIECE_AT(&game,GREEN, 0);
+    op_piece1->region = PATH;
+    op_piece1->approach = 0;
+    op_piece1->location.location = modular_add(START_AT(GREEN), 5);
+    op_piece1->block_id = NULL_BLOCK;
 
-    // // ModularInt loc1 = modular_new(52);
-    // // loc1.value = 7;
-
-    // // // ModularInt loc2 = modular_new(52);
-    // // ModularInt loc2 = modular_add(modular_add(PIECE_AT(&game, *game.player_pointer, 2).start_location, APPROACH_CELL), -4);
-
-    // // game.board->std_path[*game.player_pointer*TOTAL_PIECES_PLAYER + 1] = 1;
-    // // game.board->std_path[*game.player_pointer*TOTAL_PIECES_PLAYER + 1] = 1;
-    // // game.board->std_path[*game.player_pointer*TOTAL_PIECES_PLAYER + 1] = 1;
-
-    // PIECE_AT(&game, *game.player_pointer - 1, 1).location.location = modular_add(modular_new(7, 52), 2);
-    // PIECE_AT(&game, *game.player_pointer - 1, 1).region = PATH;
+    short block1_id = new_block(&game, GREEN, 0, 1);
+    print_block(BLOCK_AT(&game, block1_id));
+    BLOCK_AT(&game, block1_id)->movable = 1;
 
 
-    // PIECE_AT(&game, *game.player_pointer, 1).location.location = modular_new(7, 52);
-    // PIECE_AT(&game, *game.player_pointer, 1).multiplier = 0.5;
-    // PIECE_AT(&game, *game.player_pointer, 1).region = PATH; 
+    Piece *op_piece2 = &PIECE_AT(&game,GREEN, 2);
+    op_piece2->region = PATH;
+    op_piece2->location.location = modular_add(START_AT(GREEN), 7);
+    op_piece2->block_id = NULL_BLOCK;
 
-    // PIECE_AT(&game, *game.player_pointer, 2).location.location = modular_new(50, 52);
-    // PIECE_AT(&game, *game.player_pointer, 2).multiplier = 1;
-    // PIECE_AT(&game, *game.player_pointer, 2).region = PATH;
-    // PIECE_AT(&game, *game.player_pointer, 2).approach = 1; 
+    // short block2_id = new_block(&game, GREEN, 2, 3);
+    // print_block(BLOCK_AT(&game, block2_id));
+    // BLOCK_AT(&game, block2_id)->movable = 1;
+    // print_piece(op_piece2);
 
-    // PIECE_AT(&game, *game.player_pointer, 3).location.far_from_home = 4;
-    // PIECE_AT(&game, *game.player_pointer, 3).multiplier = 1;
-    // PIECE_AT(&game, *game.player_pointer, 3).region = BASE;    
-    // PIECE_AT(&game, *game.player_pointer, 2).location = 2;
-    // PIECE_AT(&game, *game.player_pointer, 2).multiplier = -1;
-    // PIECE_AT(&game, *game.player_pointer, 3).location = HOME;
-    // // printf("new_location = %d\n", get_destination(&PIECE_AT(&game, *game.player_pointer, 2), 6));
-    // // PICECE_AT(pieceArr, player_pointer, 3)->multiplier = 1;
-    // play(&game, game.player_pointer);
-    int i = 0;
-    while (++i < 10)
-    {
-        printf("\n\n====================================================================\n\n");
-        play_round(&game);
-        
-    }
+    ActionSpace action_space = generate_action_space(&game, *game.player_pointer, 4);
     
+    print_action_space(action_space);
+    Action selected_action = action_space.action_space[0];
+    printf("selected action: %d\n", selected_action.action);
+    perform(&game, GREEN, selected_action);
 
-
-    // // for (short i = 0; i < TOTAL_PLAYERS; i++)
-    // // {
-    // //     printf("%d\n", PIECE_AT(&game, 1, i).color);
-    // // }
-    
-    // printf("Piece = %d, *Piece = %d\n", sizeof(Piece), sizeof(Piece *));
-    
-
-    // ActionSpace action_space = generate_action_space(&game, *game.player_pointer, 2);
-    // print_action_space(&action_space);
-    // perform(action_space.action_space[0]);
-    
-    return 0;
+   return 0;
 }
