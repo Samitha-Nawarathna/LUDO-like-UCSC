@@ -36,8 +36,15 @@
 #define DO_NOT_CARE -1
 #define NULL_BLOCK -1
 #define NULL_PIECE -1
+#define NOT_ON_BOARD -1
 #define CLOCKWISE 1
 #define COUNTERCLOCKWISE -1
+#define NOT_ACTIVATED -1
+#define DEFAULT_MULTIPLIER 1
+
+#define BHAWANA 9
+#define KOTUWA 27
+#define PITAKOTUWA 46
 
 #define TOTAL_PIECES_PLAYER 4
 #define TOTAL_PLAYERS 4
@@ -55,13 +62,12 @@
 #define APPROACH_CELL(player_color) modular_add(START_AT((player_color)), TOTAL_CELLs - 2)
 
 #define MODULAR_IS_EQL(a, b) ((a).value == (b).value) ? true: false
-// #define _MODULAR_ADD(a, b) modular_add((a), (b).value)
-// #define MODULAR_ADD(a, b, i) ((i) == 1) ? _MODULAR_ADD((a), (b)): _MODULAR_ADD((b), (a))
-// #define _MODULAR_SUB(a, b) modular_add((a), -1*(b).value)
 
 typedef enum Color {YELLO, BLUE, RED, GREEN} Color;
 typedef enum ActionType {NULL_ACTION = -1, BRING_TO_PATH, BLOCKED, MOVE_PATH, MOVE_TO_HOME_S, MOVE_IN_HOME_S, CREAT_BLOCK, ADD_TO_BLOCK, REMOVE_FROM_BLOCK, CAPTURE, MOVE_BLOCK, CAPTURE_PIECE_BY_BLOCK, CAPTURE_BLOCK_BY_BLOCK, MERGE_BLOCK, BREAK_BLOCK, LAND_ON_MYSTORY_CELL}ActionType;
 typedef enum Region {BASE, PATH, HOME}Region;
+
+
 
 typedef struct 
 {
@@ -76,13 +82,16 @@ bool modular_is_between(ModularInt lower, ModularInt upper, ModularInt a);
 bool modular_is_between_directional(ModularInt lower, ModularInt upper, ModularInt c, bool direction);
 ModularInt MODULAR_SUB(ModularInt a, ModularInt b, short direction);
 
-// short mod_value(ModularInt a);
+
 
 typedef union 
 {
     short dist_from_home;
     ModularInt location;
 }PieceLocation;
+
+
+
 
 typedef struct 
 {
@@ -97,11 +106,15 @@ typedef struct
     bool approach;
     float multiplier;
     short block_id;
+    short rounds_affected;
 
 
 }Piece;
 
 Piece new_piece(Color color);
+
+
+
 
 typedef struct Game Game;
 
@@ -118,10 +131,10 @@ typedef struct
 
 short new_block(Game *game, Color player_color, short piece1_idx, short piece2_idx);
 void append_to_block(Game *game, short player_color, short piece_idx, short block_idx);
-void _remove_from_block(Game *game, short player_color, short piece_idx, short block_idx);
+void _remove_from_block(Game *game, short player_color, short piece_idx);
 
-// Block *new_block(Piece *piece1, Piece *piece2);
-// void append_piece(Block *block, Piece *piece);
+
+
 
 typedef struct Player Player;
 typedef struct Action Action;
@@ -142,6 +155,9 @@ typedef struct Player
 
 Player new_player(Color color, Piece *pieces, Action (* perform_strategy)(Player *self, ActionSpace action));
 
+
+
+
 typedef union 
 {
     Piece *piece;
@@ -151,12 +167,16 @@ typedef union
     short steps;
 }Operand;
 
+
+
+
 typedef struct 
 {
     bool *std_path;
 }Board;
 
 Board new_board();
+
 
 
 typedef struct Game
@@ -167,8 +187,12 @@ typedef struct Game
     Board *board;
     short *player_pointer, *winner;
     short *starting_player;
+    ModularInt *mystery_cell;
 
 }Game;
+
+
+
 
 void new_game(Game *game);
 
@@ -179,6 +203,7 @@ typedef struct Action
 }Action;
 
 
+
 typedef struct ActionSpace
 {
     Action *action_space;
@@ -186,8 +211,11 @@ typedef struct ActionSpace
 }ActionSpace;
 
 
+
 ActionSpace new_actionspace();
 void append(ActionSpace actionspace, Action action);
+
+
 
 //gameplay stratagies
 Action random_player(Player *player, ActionSpace action_space);

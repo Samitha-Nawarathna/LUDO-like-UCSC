@@ -76,10 +76,12 @@ void new_game(Game *game)
     game->starting_player = (short *)malloc(sizeof(short));
     game->winner = (short *)malloc(sizeof(short));
     game->blockArr = (Block **)malloc(sizeof(Block *)*MAX_BLOCK_COUNT);
+    game->mystery_cell = (ModularInt *)malloc(sizeof(ModularInt));
 
     *game->board = new_board();
     *game->winner = -1;
     *game->player_pointer = -1;
+    // *game->mystery_cell = NOT_ON_BOARD;
     char player_names[4][6] = {"Yello", "Blue", "Red", "Green"};
     char piece_names[16][3] = {"Y1", "Y2", "Y3", "Y4", "B1", "B2", "B3", "B4", "R1", "R2", "R3", "R4", "G1", "G2", "G3", "G4"};   
 
@@ -238,10 +240,13 @@ void append_to_block(Game *game, short player_color, short piece_idx, short bloc
 
 
 }
-void _remove_from_block(Game *game, short player_color, short piece_idx, short block_idx)
+void _remove_from_block(Game *game, short player_color, short piece_idx)
 {
     Piece *piece = &PIECE_AT(game, player_color, piece_idx);
-    Block *block = BLOCK_AT(game, block_idx);
+
+    assert(piece->block_id != NULL_BLOCK);
+
+    Block *block = BLOCK_AT(game, piece->block_id);
 
     block->no_of_pieces--;
     piece->block_id = NULL_BLOCK;
@@ -249,7 +254,7 @@ void _remove_from_block(Game *game, short player_color, short piece_idx, short b
 
     if (block->no_of_pieces == 0)
     {
-        game->blockArr[block_idx] = NULL;
+        game->blockArr[piece->block_id] = NULL;
         free(block);
     }
 

@@ -8,6 +8,7 @@
 BUGS:
  * no way to distingush the move after blocking from just moving?
     #create msg to say whether it is blocked or not but then 3 channels are not enugh
+ * not properly work move to home when piece already in apperoach cell
     
 
 */
@@ -21,9 +22,11 @@ TODO:
     *change piece functions to handle base
         #done
     *debug block actions and capture function of  pieces
-        #capture done other remains
+        #done
     *come up with a way to handle counting in mystery cell things ?  
-        #have an idea  
+        #have an idea 
+    *handle cases when block at landing cell
+    *implement remove from block in every block 
 */
 
 
@@ -71,6 +74,7 @@ void print_block(Block *block)
     printf("location : %d\n", block->location.value);
     printf("direction : %d\n", block->direction);
     printf("movable: %d\n", block->movable);
+    printf("pieces: %d\n", block->no_of_pieces);
     printf("multiplier : %f\n", block->multiplier);
     NEWLINE;
 }
@@ -81,34 +85,45 @@ short main()
     new_game(&game);
     start_game(&game);
 
-    *game.player_pointer = GREEN;
-    Piece *op_piece1 = &PIECE_AT(&game,GREEN, 0);
-    op_piece1->region = PATH;
-    op_piece1->approach = 0;
-    op_piece1->location.location = modular_add(START_AT(GREEN), 5);
-    op_piece1->block_id = NULL_BLOCK;
+    for (short i = 0; i < 1000; i++)
+    {
+        play_round(&game);
+    }
+    
+    
+    // *game.player_pointer = GREEN;
+    // // *game.mystery_cell = START_AT(GREEN);
+     
+    // Piece *op_piece1 = &PIECE_AT(&game, GREEN, 0);
+    // op_piece1->region = PATH;
+    // op_piece1->approach = 1;
+    // op_piece1->location.location = modular_add(APPROACH_CELL(GREEN), -3);
+    // op_piece1->block_id = NULL_BLOCK;
 
-    short block1_id = new_block(&game, GREEN, 0, 1);
-    print_block(BLOCK_AT(&game, block1_id));
-    BLOCK_AT(&game, block1_id)->movable = 1;
+    // short block1_id = new_block(&game, GREEN, 0, 1);
+    // print_block(BLOCK_AT(&game, block1_id));
+    // BLOCK_AT(&game, block1_id)->movable = 1;
 
 
-    Piece *op_piece2 = &PIECE_AT(&game,GREEN, 2);
-    op_piece2->region = PATH;
-    op_piece2->location.location = modular_add(START_AT(GREEN), 7);
-    op_piece2->block_id = NULL_BLOCK;
+    // Piece *op_piece2 = &PIECE_AT(&game, RED, 2);
+    // op_piece2->region = PATH;
+    // op_piece2->location.location = modular_add(APPROACH_CELL(GREEN), 0);
+    // op_piece2->block_id = NULL_BLOCK;
 
-    // short block2_id = new_block(&game, GREEN, 2, 3);
+    // short block2_id = new_block(&game, RED, 2, 3);
     // print_block(BLOCK_AT(&game, block2_id));
     // BLOCK_AT(&game, block2_id)->movable = 1;
     // print_piece(op_piece2);
 
-    ActionSpace action_space = generate_action_space(&game, *game.player_pointer, 4);
+    // ActionSpace action_space = generate_action_space(&game, *game.player_pointer, 6);
     
-    print_action_space(action_space);
-    Action selected_action = action_space.action_space[0];
-    printf("selected action: %d\n", selected_action.action);
-    perform(&game, GREEN, selected_action);
+    // print_action_space(action_space);
+    // Action selected_action = action_space.action_space[0];
+    // printf("selected action: %d\n", selected_action.action);
+    // perform(&game, GREEN, selected_action);
+
+    // // *op_piece1 = PIECE_AT(&game, GREEN, 1);
+    // print_piece(op_piece1);
 
    return 0;
 }
